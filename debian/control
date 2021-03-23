@@ -1,0 +1,31 @@
+Source: revpicommander
+Section: x11
+Priority: optional
+Maintainer: Philipp Rosenberger <p.rosenberger@kunbus.com>
+Build-Depends:
+ debhelper-compat (= 12),
+ dh-python,
+ python3-all,
+ python3-setuptools
+X-Python3-Version: >= 3.5
+Standards-Version: 4.5.0
+Homepage: https://revpimodio.org/en/sources/revpipycommander/
+Vcs-Browser: https://github.com/RevolutionPi/revpicommander
+Vcs-Git: https://github.com/RevolutionPi/revpicommander.git
+Rules-Requires-Root: no
+Testsuite: autopkgtest-pkg-python
+
+Package: revpicommander
+Architecture: all
+Depends:
+ ${python3:Depends},
+ ${misc:Depends},
+ python3-pyqt5,
+ python3-revpimodio2,
+ python3-zeroconf
+Description: GUI for Revolution Pi to upload programs and do IO-Checks
+ The RevPiCommander is a GUI tool to manage your revolution Pi over the
+ network. You can search for RevPis in your network, manage the settings
+ of RevPiPyLoad and do IO checks on your local machine. Developing your
+ control program is very easy with the developer, upload and debug it
+ over the network.
