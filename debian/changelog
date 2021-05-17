@@ -1,3 +1,16 @@
+revpicommander (0.9.2-1+revpi10) unstable; urgency=medium
+
+  [ Sven Sager ]
+  * Get AVAHI IPv4 addresses with service_info
+  * Bugfix for translations strings and format function
+  * Add parameter to change connection timeout (default was and is 5 seconds)
+  * Add a simulator dialog to manage simulator settings
+  * Bugfix for simulator to prevent GUI crash after first use
+  * Modified translations
+  * New release
+
+ -- Philipp Rosenberger <p.rosenberger@kunbus.com>  Mon, 17 May 2021 08:57:31 +0200
+
 revpicommander (0.9.1-1+revpi10) unstable; urgency=medium
 
   * Import RevPiCommander 0.9.1
