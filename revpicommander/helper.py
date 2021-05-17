@@ -9,6 +9,7 @@ import socket
 from enum import IntEnum
 from http.client import CannotSendRequest
 from os import environ, remove
+from os.path import exists
 from queue import Queue
 from threading import Lock
 from xmlrpc.client import Binary, ServerProxy
@@ -25,6 +26,7 @@ class WidgetData(IntEnum):
     has_error = 263
     port = 264
     object_name = 265
+    timeout = 266
     last_dir_upload = 301
     last_file_upload = 302
     last_dir_pictory = 303
@@ -218,9 +220,10 @@ class ConnectionManager(QtCore.QThread):
         settings.beginReadArray("connections")
         settings.setArrayIndex(settings_index)
 
-        address = settings.value("address")
-        name = settings.value("name")
-        port = settings.value("port", defaultValue=55123)
+        address = settings.value("address", str)
+        name = settings.value("name", str)
+        port = settings.value("port", 55123, int)
+        timeout = settings.value("timeout", 5, int)
 
         self.program_last_dir_upload = settings.value("last_dir_upload", ".", str)
         self.program_last_file_upload = settings.value("last_file_upload", ".", str)
@@ -228,8 +231,8 @@ class ConnectionManager(QtCore.QThread):
         self.program_last_dir_picontrol = settings.value("last_dir_picontrol", ".", str)
         self.program_last_dir_selected = settings.value("last_dir_selected", ".", str)
         self.program_last_pictory_file = settings.value("last_pictory_file", "{0}.rsc".format(name), str)
-        self.program_last_tar_file = settings.value("last_tar_file", "{0}.tgz".format(name))
-        self.program_last_zip_file = settings.value("last_zip_file", "{0}.zip".format(name))
+        self.program_last_tar_file = settings.value("last_tar_file", "{0}.tgz".format(name), str)
+        self.program_last_zip_file = settings.value("last_zip_file", "{0}.zip".format(name), str)
         self.develop_watch_files = settings.value("watch_files", [], list)
         self.develop_watch_path = settings.value("watch_path", "", str)
         self.debug_geos = settings.value("debug_geos", {}, dict)
@@ -245,6 +248,7 @@ class ConnectionManager(QtCore.QThread):
             xml_funcs = sp.system.listMethods()
             xml_mode = sp.xmlmodus()
         except Exception as e:
+            pi.logger.exception(e)
             self.connection_error_observed.emit(str(e))
             return False
 
@@ -256,7 +260,7 @@ class ConnectionManager(QtCore.QThread):
         self.xml_mode = xml_mode
 
         with self._lck_cli:
-            socket.setdefaulttimeout(5)
+            socket.setdefaulttimeout(timeout)
             self._cli = sp
             self._cli_connect.put_nowait((address, port))
 
@@ -271,7 +275,8 @@ class ConnectionManager(QtCore.QThread):
 
             self._revpi.cleanup()
             self._revpi_output.cleanup()
-            remove(self._revpi.procimg)
+            if settings.value("simulator/stop_remove", False, bool):
+                remove(self._revpi.procimg)
             self._revpi = None
             self._revpi_output = None
 
@@ -295,17 +300,18 @@ class ConnectionManager(QtCore.QThread):
 
             self.connection_disconnected.emit()
 
-    def pyload_simulate(self, configrsc: str, procimg: str):
+    def pyload_simulate(self, configrsc: str, procimg: str, clean_existing: bool):
         """Start the simulator for piControl on local computer."""
         pi.logger.debug("ConnectionManager.start_simulate")
 
-        with open(procimg, "wb") as fh:
-            fh.write(b'\x00' * 4096)
+        if not exists(procimg) or clean_existing:
+            with open(procimg, "wb") as fh:
+                fh.write(b'\x00' * 4096)
 
         try:
             import revpimodio2
 
-            # Prepare process image with default values
+            # Prepare process image with default values for outputs
             self._revpi_output = revpimodio2.RevPiModIO(configrsc=configrsc, procimg=procimg)
             self._revpi_output.setdefaultvalues()
             self._revpi_output.writeprocimg()
@@ -317,11 +323,15 @@ class ConnectionManager(QtCore.QThread):
 
             self.xml_funcs = ["psstart", "psstop", "ps_devices", "ps_inps", "ps_outs", "ps_values", "ps_setvalue"]
 
+            self.connection_established.emit()
+
         except Exception as e:
             pi.logger.exception(e)
+            self.connection_error_observed.emit(str(e))
             self._revpi_output = None
             self._revpi = None
-            remove(procimg)
+            if settings.value("simulator/stop_remove", False, bool):
+                remove(procimg)
 
         return self._revpi is not None
 
@@ -332,9 +342,14 @@ class ConnectionManager(QtCore.QThread):
     def reset_simulator(self):
         """Reset all io to piCtory defaults."""
         pi.logger.debug("ConnectionManager.reset_simulator")
-        self._revpi_output.writeprocimg()
-        self._revpi.setdefaultvalues()
-        self._revpi.writeprocimg()
+        if settings.value("simulator/restart_zero", False, bool):
+            with open(self._revpi.procimg, "wb") as fh:
+                fh.write(b'\x00' * 4096)
+            self._revpi.readprocimg()
+        else:
+            self._revpi_output.writeprocimg()
+            self._revpi.setdefaultvalues()
+            self._revpi.writeprocimg()
 
     def run(self):
         """Thread worker to check status of RevPiPyLoad."""
@@ -443,14 +458,22 @@ class ConnectionManager(QtCore.QThread):
             return None
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         """True if we have an active connection."""
         return self._cli is not None
 
     @property
-    def simulating(self):
+    def simulating(self) -> bool:
         """True, if simulating mode is running."""
         return self._revpi is not None
+
+    @property
+    def simulating_configrsc(self) -> str:
+        return self._revpi.configrsc if self._revpi else ""
+
+    @property
+    def simulating_procimg(self) -> str:
+        return self._revpi.procimg if self._revpi else ""
 
 
 cm = ConnectionManager()

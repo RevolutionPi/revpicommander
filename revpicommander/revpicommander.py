@@ -5,7 +5,7 @@
 __author__ = "Sven Sager"
 __copyright__ = "Copyright (C) 2018 Sven Sager"
 __license__ = "GPLv3"
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 
 import webbrowser
 from os.path import basename, dirname, join
@@ -22,6 +22,7 @@ from revpiinfo import RevPiInfo
 from revpioption import RevPiOption
 from revpiplclist import RevPiPlcList
 from revpiprogram import RevPiProgram
+from simulator import Simulator
 from ui.revpicommander_ui import Ui_win_revpicommander
 
 
@@ -69,20 +70,26 @@ class RevPiCommander(QtWidgets.QMainWindow, Ui_win_revpicommander):
 
     def _set_gui_control_states(self):
         """Setup states of actions and buttons."""
-        connected = helper.cm.connected
-        self.men_plc.setEnabled(connected)
-        self.act_logs.setEnabled(connected)
-        self.act_options.setEnabled(connected and helper.cm.xml_mode >= 2)
-        self.act_program.setEnabled(connected and helper.cm.xml_mode >= 2)
-        self.act_developer.setEnabled(connected and helper.cm.xml_mode >= 3)
-        self.act_pictory.setEnabled(connected)
-        self.act_reset.setEnabled(connected and helper.cm.xml_mode >= 3)
-        self.act_disconnect.setEnabled(connected)
-        self.btn_plc_start.setEnabled(connected)
-        self.btn_plc_stop.setEnabled(connected)
-        self.btn_plc_restart.setEnabled(connected)
-        self.btn_plc_logs.setEnabled(connected)
-        self.btn_plc_debug.setEnabled(connected and helper.cm.xml_mode >= 1)
+        if helper.cm.simulating:
+            self.btn_plc_stop.setEnabled(True)  # Stop simulator
+            self.btn_plc_restart.setEnabled(True)  # Reset simulator values
+            self.btn_plc_debug.setEnabled(True)
+
+        else:
+            connected = helper.cm.connected
+            self.men_plc.setEnabled(connected)
+            self.act_logs.setEnabled(connected)
+            self.act_options.setEnabled(connected and helper.cm.xml_mode >= 2)
+            self.act_program.setEnabled(connected and helper.cm.xml_mode >= 2)
+            self.act_developer.setEnabled(connected and helper.cm.xml_mode >= 3)
+            self.act_pictory.setEnabled(connected)
+            self.act_reset.setEnabled(connected and helper.cm.xml_mode >= 3)
+            self.act_disconnect.setEnabled(connected)
+            self.btn_plc_start.setEnabled(connected)
+            self.btn_plc_stop.setEnabled(connected)
+            self.btn_plc_restart.setEnabled(connected)
+            self.btn_plc_logs.setEnabled(connected)
+            self.btn_plc_debug.setEnabled(connected and helper.cm.xml_mode >= 1)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # region #      REGION: Connection management
@@ -127,11 +134,17 @@ class RevPiCommander(QtWidgets.QMainWindow, Ui_win_revpicommander):
         pi.logger.debug("RevPiCommander.on_cm_connection_established")
 
         self._set_gui_control_states()
-        self.txt_connection.setText("{0} - {1}:{2}".format(
-            helper.cm.name,
-            helper.cm.address,
-            helper.cm.port
-        ))
+        if helper.cm.simulating:
+            self.txt_connection.setText("configrsc=\"{0}\", procimg=\"{1}\"".format(
+                helper.cm.simulating_configrsc,
+                helper.cm.simulating_procimg,
+            ))
+        else:
+            self.txt_connection.setText("{0} - {1}:{2}".format(
+                helper.cm.name,
+                helper.cm.address,
+                helper.cm.port
+            ))
         self.win_files = RevPiFiles(self)
 
     @QtCore.pyqtSlot(str, str)
@@ -193,51 +206,33 @@ class RevPiCommander(QtWidgets.QMainWindow, Ui_win_revpicommander):
     @QtCore.pyqtSlot()
     def on_act_simulator_triggered(self):
         """Start the simulator function."""
-        helper.cm.pyload_disconnect()
-
-        diag_open = QtWidgets.QFileDialog(
-            self, self.tr("Select downloaded piCtory file..."),
-            helper.settings.value("simulator_pictory", ".", str),
-            self.tr("piCtory file (*.rsc);;All files (*.*)")
-        )
-        diag_open.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        diag_open.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        diag_open.setDefaultSuffix("rsc")
-
-        if diag_open.exec() != QtWidgets.QFileDialog.AcceptSave or len(diag_open.selectedFiles()) != 1:
+        diag = Simulator(self)
+        if diag.exec() != QtWidgets.QDialog.Accepted:
+            diag.deleteLater()
             return
 
-        configrsc_file = diag_open.selectedFiles()[0]
-        dir_name = dirname(configrsc_file)
-        procimg_file = join(dir_name, "{0}.img".format(
-            basename(configrsc_file).rsplit(".", maxsplit=1)[0]
-        ))
-        helper.settings.setValue("simulator_pictory", configrsc_file)
+        helper.cm.pyload_disconnect()
+        configrsc_file = helper.settings.value("simulator/configrsc", "", str)
+        procimg_file = helper.settings.value("simulator/procimg", "", str)
 
-        if helper.cm.pyload_simulate(configrsc_file, procimg_file):
+        if helper.cm.pyload_simulate(configrsc_file, procimg_file, diag.cbx_stop_remove.isChecked()):
             QtWidgets.QMessageBox.information(
                 self, self.tr("Simulator started..."), self.tr(
                     "The simulator is running!\n\nYou can work with this simulator if your call "
-                    "RevPiModIO with this additional parameters:\nprocimg={procimg}\nconfigrsc={config}\n\n"
+                    "RevPiModIO with this additional parameters:\nprocimg={0}\nconfigrsc={1}\n\n"
                     "You can copy that from header textbox."
-                ).format(procimg=procimg_file, config=configrsc_file)
+                ).format(procimg_file, configrsc_file)
             )
-            self.txt_connection.setText(
-                "configrsc=\"{0}\", procimg=\"{1}\"".format(configrsc_file, procimg_file)
-            )
-
-            # Stop button will disable simulating
-            self.btn_plc_stop.setEnabled(True)
-            self.btn_plc_restart.setEnabled(True)
-            self.btn_plc_debug.setEnabled(True)
         else:
             pi.logger.error("Can not start simulator")
             QtWidgets.QMessageBox.critical(
                 self, self.tr("Can not start..."), self.tr(
                     "Can not start the simulator! Maybe the piCtory file is corrupt "
-                    "or you can not write to the location '{0}'.".format(dir_name)
-                )
+                    "or you have no write permissions for '{0}'."
+                ).format(procimg_file)
             )
+
+        diag.deleteLater()
 
     @QtCore.pyqtSlot()
     def on_act_logs_triggered(self):
@@ -249,8 +244,7 @@ class RevPiCommander(QtWidgets.QMainWindow, Ui_win_revpicommander):
             QtWidgets.QMessageBox.warning(
                 self, self.tr("Warning"), self.tr(
                     "This version of Logviewer ist not supported in version {0} "
-                    "of RevPiPyLoad on your RevPi! You need at least version "
-                    "0.4.1."
+                    "of RevPiPyLoad on your RevPi! You need at least version 0.4.1."
                 ).format(helper.cm.call_remote_function("version", default_value="-"))
             )
             return None
@@ -410,10 +404,12 @@ class RevPiCommander(QtWidgets.QMainWindow, Ui_win_revpicommander):
         if helper.cm.simulating:
             rc = QtWidgets.QMessageBox.question(
                 self, self.tr("Reset to piCtory defaults..."), self.tr(
-                    "Do you want to reset your process image to piCtory default values?\n"
+                    "Do you want to reset your process image to {0} values?\n"
                     "You have to stop other RevPiModIO programs before doing that, "
                     "because they could reset the outputs."
-                )
+                ).format(
+                    self.tr("zero") if helper.settings.value("simulator/restart_zero", False, bool)
+                    else self.tr("piCtory default"))
             ) == QtWidgets.QMessageBox.Yes
             if rc:
                 # Set piCtory default values in process image
@@ -477,8 +473,8 @@ class RevPiCommander(QtWidgets.QMainWindow, Ui_win_revpicommander):
 if __name__ == "__main__":
     import sys
 
-    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+    # QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    # QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
     app = QtWidgets.QApplication(sys.argv)
 
@@ -497,7 +493,7 @@ if __name__ == "__main__":
 
     win = RevPiCommander()
     win.show()
-    exit_code = app.exec_()
+    exit_code = app.exec()
 
     # Clean up workers
     helper.cm.requestInterruption()

@@ -9,7 +9,7 @@ import os
 import tarfile
 import zipfile
 from shutil import rmtree
-from tempfile import mkdtemp, mkstemp
+from tempfile import mkdtemp
 from xmlrpc.client import Binary
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -174,7 +174,7 @@ class RevPiProgram(QtWidgets.QDialog, Ui_diag_program):
 
         self._load_settings()
         self._apply_acl()
-        
+
         return super(RevPiProgram, self).exec()
 
     def reject(self) -> None:
@@ -635,8 +635,7 @@ class RevPiProgram(QtWidgets.QDialog, Ui_diag_program):
             QtWidgets.QMessageBox.information(
                 self, self.tr("Success"), self.tr(
                     "piCtory configuration successfully loaded and saved to:\n{0}."
-                    "".format(filename)
-                )
+                ).format(filename)
             )
 
     @QtCore.pyqtSlot()
@@ -699,8 +698,7 @@ class RevPiProgram(QtWidgets.QDialog, Ui_diag_program):
             QtWidgets.QMessageBox.information(
                 self, self.tr("Success"), self.tr(
                     "Process image successfully loaded and saved to:\n{0}."
-                    "".format(filename)
-                )
+                ).format(filename)
             )
 
     # endregion # # # # #

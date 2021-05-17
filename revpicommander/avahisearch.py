@@ -6,10 +6,9 @@ __license__ = "GPLv3"
 
 from os import name as osname
 from re import compile
-from socket import gethostbyname
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from zeroconf import ServiceBrowser, Zeroconf
+from zeroconf import IPVersion, ServiceBrowser, Zeroconf
 
 import helper
 import proginit as pi
@@ -62,11 +61,8 @@ class AvahiSearchThread(QtCore.QThread):
         if not info:
             return
 
-        try:
-            ip = gethostbyname(info.server)
-        except Exception:
-            ip = self.tr("N/A")
-        self.added.emit(name, info.server, info.port, conf_type, ip)
+        for ip in info.parsed_addresses(IPVersion.V4Only):
+            self.added.emit(name, info.server, info.port, conf_type, ip)
 
     def run(self):
         pi.logger.debug("Started zero conf discovery.")
@@ -132,8 +128,8 @@ class AvahiSearch(QtWidgets.QDialog, Ui_diag_search):
                     QtWidgets.QMessageBox.information(
                         self, self.tr("Already in list..."), self.tr(
                             "The selected Revolution Pi is already saved in your "
-                            "connection list as '{0}.".format(name)
-                        )
+                            "connection list as '{0}'."
+                        ).format(name)
                     )
                 helper.settings.endArray()
                 return i
@@ -153,8 +149,8 @@ class AvahiSearch(QtWidgets.QDialog, Ui_diag_search):
             QtWidgets.QMessageBox.information(
                 self, self.tr("Success"), self.tr(
                     "The connection with the name '{0}' was successfully saved "
-                    "to folder '{1}' in your connections.".format(selected_name, folder_name)
-                )
+                    "to folder '{1}' in your connections."
+                ).format(selected_name, folder_name)
             )
 
         return i + 1
