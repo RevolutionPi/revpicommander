@@ -22,6 +22,7 @@ class LogType(IntEnum):
 class DataThread(QtCore.QThread):
     error_detected = QtCore.pyqtSignal(str)
     line_logged = QtCore.pyqtSignal(LogType, bool, str)
+    """log_type, success, text"""
 
     def __init__(self, parent=None, cycle_time=1000):
         super(DataThread, self).__init__(parent)
@@ -30,7 +31,7 @@ class DataThread(QtCore.QThread):
         self._cycle_time = cycle_time
         self._paused = True
         self.error_count = 0
-        self.max_block = 256000
+        self.max_block = 16384  # 16 kByte
         self.mrk_app = 0
         self.mrk_daemon = 0
 
@@ -44,7 +45,7 @@ class DataThread(QtCore.QThread):
         :return: tuple(position: int, EOF: bool)
         """
         # Load max data from start position
-        buff_log = xmlcall(start_position, self.max_block).data
+        buff_log = xmlcall(start_position, self.max_block).data  # type: bytes
 
         eof = True
         if buff_log == b'\x16':  # 'ESC'
@@ -55,20 +56,23 @@ class DataThread(QtCore.QThread):
             # The log file was rotated by log rotate on the Revolution Pi
             start_position = 0
             eof = False
+            pi.logger.info("RevPi started a new log file.")
 
         elif buff_log:
             start_position += len(buff_log)
             eof = len(buff_log) < self.max_block
-            self.line_logged.emit(log_type, True, buff_log.decode("utf-8"))
+            self.line_logged.emit(log_type, True, buff_log.decode("utf-8", errors="replace"))
 
         return start_position, eof
 
     def pause(self):
         """Stop checking new log lines, but leave thread alive."""
+        pi.logger.debug("DataThread.pause")
         self._paused = True
 
     def resume(self):
         """Start checking for new log lines."""
+        pi.logger.debug("DataThread.resume")
         self._paused = False
 
     def run(self) -> None:
@@ -108,7 +112,7 @@ class RevPiLogfile(QtWidgets.QMainWindow, Ui_win_revpilogfile):
         super(RevPiLogfile, self).__init__(parent)
         self.setupUi(self)
 
-        self.th_data = DataThread()
+        self.th_data = DataThread(self)
         self.err_daemon = 0
 
         helper.cm.connection_established.connect(self.on_cm_connection_established)
@@ -119,7 +123,7 @@ class RevPiLogfile(QtWidgets.QMainWindow, Ui_win_revpilogfile):
     def _create_data_thread(self):
         self.th_data.deleteLater()
 
-        self.th_data = DataThread()
+        self.th_data = DataThread(self)
         self.th_data.error_detected.connect(self.txt_daemon.setPlainText)
         self.th_data.line_logged.connect(self.on_line_logged)
         self.th_data.start()
