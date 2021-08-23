@@ -1,3 +1,15 @@
+revpicommander (0.9.3-1+revpi10) UNRELEASED; urgency=medium
+
+  [ Sven Sager ]
+  * Add upload progress display in developer, bugfix on file download in developer
+  * Fix error on decoding broken log files
+  * Fix crash during add new connection
+  * Reduce max block to load for log files on slow networks
+  * Improved RevPi search window
+  * New release
+
+ -- Philipp Rosenberger <p.rosenberger@kunbus.com>  Mon, 23 Aug 2021 09:36:16 +0200
+
 revpicommander (0.9.2-1+revpi10) unstable; urgency=medium
 
   [ Sven Sager ]
