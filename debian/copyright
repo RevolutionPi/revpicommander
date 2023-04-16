@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: revpicommander
 Source: https://github.com/naruxde/revpicommander
+Upstream-Name: revpicommander
 
 Files: *
 Copyright: 2021 Sven Sager <akira@narux.de>

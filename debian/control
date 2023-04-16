@@ -2,17 +2,17 @@ Source: revpicommander
 Section: x11
 Priority: optional
 Maintainer: Philipp Rosenberger <p.rosenberger@kunbus.com>
+Rules-Requires-Root: no
+Homepage: https://revpimodio.org/en/sources/revpipycommander/
+Vcs-Browser: https://github.com/RevolutionPi/revpicommander
+Vcs-Git: https://github.com/RevolutionPi/revpicommander.git
 Build-Depends:
  debhelper-compat (= 12),
  dh-python,
  python3-all,
  python3-setuptools
-X-Python3-Version: >= 3.5
 Standards-Version: 4.5.0
-Homepage: https://revpimodio.org/en/sources/revpipycommander/
-Vcs-Browser: https://github.com/RevolutionPi/revpicommander
-Vcs-Git: https://github.com/RevolutionPi/revpicommander.git
-Rules-Requires-Root: no
+X-Python3-Version: >= 3.5
 Testsuite: autopkgtest-pkg-python
 
 Package: revpicommander
