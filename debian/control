@@ -1,9 +1,9 @@
 Source: revpicommander
 Section: x11
 Priority: optional
-Maintainer: Philipp Rosenberger <p.rosenberger@kunbus.com>
+Maintainer: KUNBUS GmbH <support@kunbus.com>
 Rules-Requires-Root: no
-Homepage: https://revpimodio.org/en/sources/revpipycommander/
+Homepage: https://revpimodio.org/revpipyplc/
 Vcs-Browser: https://github.com/RevolutionPi/revpicommander
 Vcs-Git: https://github.com/RevolutionPi/revpicommander.git
 Build-Depends:
@@ -12,8 +12,6 @@ Build-Depends:
   python3-all,
   python3-setuptools
 Standards-Version: 4.3.0
-X-Python3-Version: >= 3.5
-Testsuite: autopkgtest-pkg-python
 
 Package: revpicommander
 Architecture: all
