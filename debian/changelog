@@ -1,4 +1,4 @@
-revpicommander (0.9.3-1+revpi10) UNRELEASED; urgency=medium
+revpicommander (0.9.3-1+revpi11+1) bullseye; urgency=medium
 
   [ Sven Sager ]
   * Add upload progress display in developer, bugfix on file download in developer
