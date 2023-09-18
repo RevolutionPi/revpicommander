@@ -1,3 +1,69 @@
+revpicommander (0.10.0-1+revpi11+1) bullseye; urgency=medium
+
+  * Fix error in debugios.py with long byte values
+  * Bugfix: RevPi simulator could not be startet without existing proc.img file
+  * Design things: enable HighDpi, dependency versions, icon text
+  * Add Windows files for pyinstaller and setup generation
+  * Fix qt parents of menu entries in connections
+  * Improved shortcuts to meet the needs of different operating systems
+  * Implement update function of ZeroConf ServiceListener
+  * Redesign main window with text boxes to copy host name or ip
+  * Add translation of status codes
+  * Bugfix: could not open debugcontrol, because of new layout names
+  * Add context menu with copy and piCtory actions to revpi search dialog
+  * Switch project so src layout
+  * Switch to setuptools for setup.py
+  * Add icons to commander main window for start, stop and so on
+  * Update Makefile and requirements.txt for build and clean ui files
+  * Add PyInstaller script for Windows
+  * QTranslator uses ui_languages to find translation
+  * Use cm.call_remote_function to fetch log files via XML-RPC
+  * Prepare SSH tunnel server and password GUI
+  * Configure and start ssh tunneled connections
+  * Choose connection type (ssh or xml-rpc) in avahisearch dialog
+  * Update Makefile rules
+  * Update translation file
+  * Update Windows setup script to match pyinstaller output
+  * Manage revolution pi saved settings in an own class
+  * Change most button pressed event to clicked and add global shortcuts
+  * Set the use of ssh tunnel to default value for new settings
+  * Save SSH credentials with keyring module
+  * Show just the hostname without .local in avahisearch.py list
+  * Bugfix for new settings management
+  * Clean up keyring when a connection is deleted
+  * Move version number from revpicommander.py to __init__.py
+  * New async connection management with user feedback
+  * Connection list with add folder button and removed naming bug
+  * Move version number from __init__.py to __main__.py
+  * Adjustments for creating installations on various operating systems
+  * Bugfix: Add missing packages to install_requires
+  * Add option to switch word order on debugios
+  * Add pyinstaller option for linux platform
+  * Bugfix type hinting, PyLoad version handling, piCtory browser
+  * Update translation and messages
+  * Change license from GPLv3 to GPLv2 after approval of all contributors
+  * Replaces Master-Slave with Client-Server
+  * Bugfix in super call of backgroundworker.py
+  * Ignore ssh known_hosts from home directory, use own
+  * build: Use system python interpreter in make file
+  * fix: Show program dialog, even if there are no files on the RevPi
+  * chore: Release 0.10.0rc1
+  * fix: PLC monitor crashes when a device has no inputs or outputs
+  * build: Add environment variable to set alternative venv path
+  * feat: SSH tunnel server extended to execute commands on remote host.
+  * build: Use python interpreter and modules for qt commands in Makefile
+  * feat: Try to start RevPiPyLoad via SSH on the Revolution Pi
+  * fix: Simulator always sets process image to NULL
+  * build: Fix Makefile targets to match GNU coding standards
+  * feat: Change entrypoint name
+  * chore: Release 0.10.0
+  * packaging: Update upstream license from GPLv3 to GPLv2
+  * packaging(patch): Change entry point name in setup.py
+  * packaging: Adapt packaging to new folders hierachie
+  * packaging: Add all used python libraries to build depends for testing
+
+ -- Sven Sager <s.sager@kunbus.com>  Mon, 18 Sep 2023 07:24:06 +0200
+
 revpicommander (0.9.3-1+revpi11+1) bullseye; urgency=medium
 
   [ Sven Sager ]
