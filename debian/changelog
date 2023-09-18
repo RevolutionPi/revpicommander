@@ -1,4 +1,4 @@
-revpicommander (0.10.0-1+revpi11+1) bullseye; urgency=medium
+revpicommander (0.10.0-1+revpi12+1) bookworm; urgency=medium
 
   * Fix error in debugios.py with long byte values
   * Bugfix: RevPi simulator could not be startet without existing proc.img file
