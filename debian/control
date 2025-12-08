@@ -5,7 +5,7 @@ Maintainer: KUNBUS GmbH <support@kunbus.com>
 Rules-Requires-Root: no
 Homepage: https://revpimodio.org/revpipyplc/
 Vcs-Browser: https://gitlab.com/RevolutionPi/revpicommander
-Vcs-Git: https://gitlab.com/RevolutionPi/revpicommander.git -b debian/bookworm
+Vcs-Git: https://gitlab.com/RevolutionPi/revpicommander.git -b debian/trixie
 Build-Depends:
   debhelper-compat (= 13),
   dh-python,
@@ -17,7 +17,7 @@ Build-Depends:
   python3-zeroconf (>= 0.24.4),
   python3-setuptools,
   python3-wheel
-Standards-Version: 4.6.2
+Standards-Version: 4.7.2
 
 Package: revpicommander
 Architecture: all
